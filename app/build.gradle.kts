@@ -13,12 +13,15 @@ android {
   namespace = "com.example"
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
+  val buildVersionCode = project.findProperty("versionCode")?.toString()?.toIntOrNull() ?: 1
+  val buildVersionName = project.findProperty("versionName")?.toString() ?: "1.0"
+
   defaultConfig {
     applicationId = "com.aistudio.loantracker.hskdwq"
     minSdk = 24
     targetSdk = 36
-    versionCode = 1
-    versionName = "1.0"
+    versionCode = buildVersionCode
+    versionName = buildVersionName
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
