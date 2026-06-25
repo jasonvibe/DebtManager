@@ -64,6 +64,9 @@ jobs:
             echo "debug.keystore.base64 not found, relying on default build setup."
           fi
 
+      - name: Make Gradle Wrapper Executable
+        run: chmod +x gradlew
+
       - name: Build Android APK
         id: build_apk
         env:
@@ -79,7 +82,7 @@ jobs:
             export KEYSTORE_PATH="$(pwd)/my-upload-key.jks"
             
             echo "Building Release APK..."
-            gradle assembleRelease \
+            ./gradlew assembleRelease \
               -PversionCode=${{ steps.version.outputs.VERSION_CODE }} \
               -PversionName=${{ steps.version.outputs.VERSION_NAME }}
             
@@ -92,7 +95,7 @@ jobs:
             echo "IS_RELEASE=true" >> $GITHUB_OUTPUT
           else
             echo "Release signing secrets not found or incomplete. Falling back to Debug APK..."
-            gradle assembleDebug \
+            ./gradlew assembleDebug \
               -PversionCode=${{ steps.version.outputs.VERSION_CODE }} \
               -PversionName=${{ steps.version.outputs.VERSION_NAME }}
             
@@ -117,7 +120,14 @@ jobs:
           echo "APK_DEST=$APK_DEST" >> $GITHUB_ENV
           echo "Prepared APK asset: $APK_DEST"
 
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LoanTracker-v${{ steps.version.outputs.VERSION_NAME }}-APK
+          path: ${{ env.APK_DEST }}
+
       - name: Create GitHub Release
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
