@@ -113,16 +113,10 @@ fun SettingsScreen(
             // --- App Version & Update Check Card (Featured at Top) ---
             item {
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(
-                            width = 1.5.dp,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                            shape = RoundedCornerShape(20.dp)
-                        ),
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
@@ -135,24 +129,27 @@ fun SettingsScreen(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.weight(1f)
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(40.dp)
+                                    .size(36.dp)
                                     .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary)
+                                    .background(MaterialTheme.colorScheme.primaryContainer)
                                     .padding(8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Info,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.size(24.dp)
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
-                            Column {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -166,14 +163,14 @@ fun SettingsScreen(
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(6.dp))
-                                            .background(MaterialTheme.colorScheme.primary)
+                                            .background(MaterialTheme.colorScheme.primaryContainer)
                                             .padding(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
                                         Text(
                                             text = "最新版",
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onPrimary
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
                                         )
                                     }
                                 }
@@ -196,8 +193,8 @@ fun SettingsScreen(
                             },
                             enabled = !checkingUpdate,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             ),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.height(38.dp)
@@ -206,7 +203,7 @@ fun SettingsScreen(
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(16.dp),
                                     strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.onPrimary
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("检测中", fontSize = 13.sp)

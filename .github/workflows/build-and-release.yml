@@ -30,8 +30,6 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '9.3.1'
 
       - name: Determine Versioning
         id: version
@@ -82,7 +80,7 @@ jobs:
             export KEYSTORE_PATH="$(pwd)/my-upload-key.jks"
             
             echo "Building Release APK..."
-            ./gradlew assembleRelease \
+            ./gradlew assembleRelease --no-configuration-cache --no-daemon \
               -PversionCode=${{ steps.version.outputs.VERSION_CODE }} \
               -PversionName=${{ steps.version.outputs.VERSION_NAME }}
             
@@ -95,7 +93,7 @@ jobs:
             echo "IS_RELEASE=true" >> $GITHUB_OUTPUT
           else
             echo "Release signing secrets not found or incomplete. Falling back to Debug APK..."
-            ./gradlew assembleDebug \
+            ./gradlew assembleDebug --no-configuration-cache --no-daemon \
               -PversionCode=${{ steps.version.outputs.VERSION_CODE }} \
               -PversionName=${{ steps.version.outputs.VERSION_NAME }}
             
