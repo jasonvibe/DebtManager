@@ -110,6 +110,18 @@ jobs:
           VERSION_NAME="${{ steps.version.outputs.VERSION_NAME }}"
           APK_SRC="${{ steps.build_apk.outputs.APK_PATH }}"
           
+          if [ -z "$APK_SRC" ] || [ ! -f "$APK_SRC" ]; then
+            echo "Warning: Expected APK not found at '$APK_SRC'. Searching for any compiled APK..."
+            FOUND_APK=$(find app/build/outputs/ -name "*.apk" | head -n 1)
+            if [ -n "$FOUND_APK" ]; then
+              echo "Found APK at: $FOUND_APK"
+              APK_SRC="$FOUND_APK"
+            else
+              echo "Error: No APK file found in build outputs!"
+              exit 1
+            fi
+          fi
+          
           if [ "${{ steps.build_apk.outputs.IS_RELEASE }}" = "true" ]; then
             APK_DEST="LoanTracker-v${VERSION_NAME}-release.apk"
           else
