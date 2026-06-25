@@ -35,6 +35,16 @@ import com.example.data.model.RepaymentPlan
 import com.example.util.DateUtils
 import java.util.Calendar
 
+data class DashboardStats(
+    val totalLent: Double,
+    val totalPaidPrincipal: Double,
+    val remainingPrincipal: Double,
+    val thisMonthDue: Double,
+    val overdueAmount: Double,
+    val totalReceivedInterest: Double,
+    val returnProgress: Float
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -48,29 +58,43 @@ fun DashboardScreen(
     val currentDateStr = DateUtils.getCurrentDate()
     val currentMonthPrefix = currentDateStr.substring(0, 7) // "YYYY-MM"
 
-    // 1. Calculations
-    val totalLent = loans.sumOf { it.principal }
-    
-    val totalPaidPrincipal = repaymentPlans
-        .filter { it.status == "已收" }
-        .sumOf { it.principalPart }
-        
-    val remainingPrincipal = (totalLent - totalPaidPrincipal).coerceAtLeast(0.0)
+    // 1. Cache-optimized Calculations
+    val stats = remember(loans, repaymentPlans, currentMonthPrefix) {
+        val totalLent = loans.sumOf { it.principal }
+        val totalPaidPrincipal = repaymentPlans
+            .filter { it.status == "已收" }
+            .sumOf { it.principalPart }
+        val remainingPrincipal = (totalLent - totalPaidPrincipal).coerceAtLeast(0.0)
 
-    val thisMonthDue = repaymentPlans
-        .filter { it.dueDate.startsWith(currentMonthPrefix) && it.status != "已收" }
-        .sumOf { it.totalAmount }
+        val thisMonthDue = repaymentPlans
+            .filter { it.dueDate.startsWith(currentMonthPrefix) && it.status != "已收" }
+            .sumOf { it.totalAmount }
 
-    val overdueAmount = repaymentPlans
-        .filter { (it.status == "逾期" || (it.status == "待收" && DateUtils.isOverdue(it.dueDate, it.status))) }
-        .sumOf { it.totalAmount }
+        val overdueAmount = repaymentPlans
+            .filter { (it.status == "逾期" || (it.status == "待收" && DateUtils.isOverdue(it.dueDate, it.status))) }
+            .sumOf { it.totalAmount }
 
-    val totalReceivedInterest = repaymentPlans
-        .filter { it.status == "已收" }
-        .sumOf { it.interestPart }
+        val totalReceivedInterest = repaymentPlans
+            .filter { it.status == "已收" }
+            .sumOf { it.interestPart }
 
-    // Progress percentage
-    val returnProgress = if (totalLent > 0) (totalPaidPrincipal / totalLent).toFloat() else 0f
+        val returnProgress = if (totalLent > 0) (totalPaidPrincipal / totalLent).toFloat() else 0f
+
+        DashboardStats(
+            totalLent = totalLent,
+            totalPaidPrincipal = totalPaidPrincipal,
+            remainingPrincipal = remainingPrincipal,
+            thisMonthDue = thisMonthDue,
+            overdueAmount = overdueAmount,
+            totalReceivedInterest = totalReceivedInterest,
+            returnProgress = returnProgress
+        )
+    }
+
+    // High performance lookup cache for active payment dates
+    val activeDatesSet = remember(repaymentPlans) {
+        repaymentPlans.map { it.dueDate }.toSet()
+    }
 
     // 2. Calendar Highlight logic
     // We want to construct a clean horizontal list of days for the current month
@@ -84,7 +108,9 @@ fun DashboardScreen(
 
     // Repayment plans due on selected day
     val selectedDateStr = String.format("%04d-%02d-%02d", year, month, selectedDay)
-    val plansOnSelectedDay = repaymentPlans.filter { it.dueDate == selectedDateStr }
+    val plansOnSelectedDay = remember(repaymentPlans, selectedDateStr) {
+        repaymentPlans.filter { it.dueDate == selectedDateStr }
+    }
 
     Scaffold(
         topBar = {
@@ -178,7 +204,7 @@ fun DashboardScreen(
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "¥${String.format("%,.2f", totalLent)}",
+                                text = "¥${String.format("%,.2f", stats.totalLent)}",
                                 fontSize = 34.sp,
                                 fontWeight = FontWeight.Black,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -191,7 +217,7 @@ fun DashboardScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 LinearProgressIndicator(
-                                    progress = { returnProgress },
+                                    progress = { stats.returnProgress },
                                     modifier = Modifier
                                         .weight(1f)
                                         .height(10.dp)
@@ -201,7 +227,7 @@ fun DashboardScreen(
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    text = "${(returnProgress * 100).toInt()}% 已回",
+                                    text = "${(stats.returnProgress * 100).toInt()}% 已回",
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -213,12 +239,12 @@ fun DashboardScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "已收回本金: ¥${String.format("%,.2f", totalPaidPrincipal)}",
+                                    text = "已收回本金: ¥${String.format("%,.2f", stats.totalPaidPrincipal)}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                                 )
                                 Text(
-                                    text = "剩余待收本金: ¥${String.format("%,.2f", remainingPrincipal)}",
+                                    text = "剩余待收本金: ¥${String.format("%,.2f", stats.remainingPrincipal)}",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -237,16 +263,16 @@ fun DashboardScreen(
                 ) {
                     DashboardStatsCard(
                         title = "本月应回款",
-                        amount = thisMonthDue,
+                        amount = stats.thisMonthDue,
                         icon = Icons.Outlined.Payments,
                         color = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.weight(1f)
                     )
                     DashboardStatsCard(
                         title = "逾期未收",
-                        amount = overdueAmount,
+                        amount = stats.overdueAmount,
                         icon = Icons.Outlined.NotificationImportant,
-                        color = if (overdueAmount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = if (stats.overdueAmount > 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -259,7 +285,7 @@ fun DashboardScreen(
                 ) {
                     DashboardStatsCard(
                         title = "已收利息收入",
-                        amount = totalReceivedInterest,
+                        amount = stats.totalReceivedInterest,
                         icon = Icons.Outlined.TrendingUp,
                         color = Color(0xFF2E7D32), // Custom green accent
                         modifier = Modifier.weight(1f)
@@ -326,7 +352,7 @@ fun DashboardScreen(
                     ) {
                         items((1..maxDays).toList()) { day ->
                             val checkDateStr = String.format("%04d-%02d-%02d", year, month, day)
-                            val hasPlan = repaymentPlans.any { it.dueDate == checkDateStr }
+                            val hasPlan = activeDatesSet.contains(checkDateStr)
                             val isSelected = day == selectedDay
 
                             Box(

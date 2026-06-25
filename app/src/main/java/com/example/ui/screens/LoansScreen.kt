@@ -28,6 +28,12 @@ import com.example.data.model.Loan
 import com.example.data.model.RepaymentPlan
 import com.example.util.DateUtils
 
+data class LoanCalculatedStats(
+    val paidSum: Double,
+    val remainingPrincipal: Double,
+    val paidPeriods: Int
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoansScreen(
@@ -58,6 +64,18 @@ fun LoansScreen(
     val loanOverdueMap = remember(repaymentPlans) {
         repaymentPlans.groupBy { it.loanId }.mapValues { (_, plans) ->
             plans.any { (it.status == "逾期" || (it.status == "待收" && DateUtils.isOverdue(it.dueDate, it.status))) }
+        }
+    }
+
+    // Pre-calculate stats per loan for fluid scrolling
+    val loanStatsMap = remember(loans, repaymentPlans) {
+        repaymentPlans.groupBy { it.loanId }.mapValues { (loanId, plans) ->
+            val loan = loans.find { it.id == loanId }
+            val principal = loan?.principal ?: 0.0
+            val paidSum = plans.filter { it.status == "已收" }.sumOf { it.principalPart }
+            val remainingPrincipal = (principal - paidSum).coerceAtLeast(0.0)
+            val paidPeriods = plans.count { it.status == "已收" }
+            LoanCalculatedStats(paidSum, remainingPrincipal, paidPeriods)
         }
     }
 
@@ -250,11 +268,11 @@ fun LoansScreen(
                         val nextPlan = nextPlanMap[loan.id]
                         val isOverdue = loanOverdueMap[loan.id] ?: false
 
-                        // Calculate total paid and remaining
-                        val loanPlans = repaymentPlans.filter { it.loanId == loan.id }
-                        val paidSum = loanPlans.filter { it.status == "已收" }.sumOf { it.principalPart }
-                        val remainingPrincipal = (loan.principal - paidSum).coerceAtLeast(0.0)
-                        val paidPeriods = loanPlans.count { it.status == "已收" }
+                        // Calculate total paid and remaining using high performance cached map
+                        val stats = loanStatsMap[loan.id] ?: LoanCalculatedStats(0.0, loan.principal, 0)
+                        val paidSum = stats.paidSum
+                        val remainingPrincipal = stats.remainingPrincipal
+                        val paidPeriods = stats.paidPeriods
 
                         Card(
                             onClick = { onLoanClick(loan.id) },

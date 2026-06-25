@@ -29,6 +29,18 @@ import com.example.data.model.Loan
 import com.example.data.model.RepaymentPlan
 import com.example.util.DateUtils
 
+data class LoanDetailStats(
+    val totalInterest: Double,
+    val totalPrincipal: Double,
+    val totalAmount: Double,
+    val paidPrincipal: Double,
+    val paidInterest: Double,
+    val paidTotal: Double,
+    val remainingPrincipal: Double,
+    val remainingInterest: Double,
+    val remainingTotal: Double
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoanDetailScreen(
@@ -73,17 +85,31 @@ fun LoanDetailScreen(
     var paymentStatus by remember { mutableStateOf("已收") } // "已收" or "待收"
 
     // Statistics calculations
-    val totalInterest = loan.totalInterest
-    val totalPrincipal = loan.principal
-    val totalAmount = totalPrincipal + totalInterest
+    val detailStats = remember(loan, repaymentPlans) {
+        val totalInterest = loan.totalInterest
+        val totalPrincipal = loan.principal
+        val totalAmount = totalPrincipal + totalInterest
 
-    val paidPrincipal = repaymentPlans.filter { it.status == "已收" }.sumOf { it.principalPart }
-    val paidInterest = repaymentPlans.filter { it.status == "已收" }.sumOf { it.interestPart }
-    val paidTotal = repaymentPlans.filter { it.status == "已收" }.sumOf { it.actualReceivedAmount ?: it.totalAmount }
+        val paidPrincipal = repaymentPlans.filter { it.status == "已收" }.sumOf { it.principalPart }
+        val paidInterest = repaymentPlans.filter { it.status == "已收" }.sumOf { it.interestPart }
+        val paidTotal = repaymentPlans.filter { it.status == "已收" }.sumOf { it.actualReceivedAmount ?: it.totalAmount }
 
-    val remainingPrincipal = (totalPrincipal - paidPrincipal).coerceAtLeast(0.0)
-    val remainingInterest = (totalInterest - paidInterest).coerceAtLeast(0.0)
-    val remainingTotal = (totalAmount - paidTotal).coerceAtLeast(0.0)
+        val remainingPrincipal = (totalPrincipal - paidPrincipal).coerceAtLeast(0.0)
+        val remainingInterest = (totalInterest - paidInterest).coerceAtLeast(0.0)
+        val remainingTotal = (totalAmount - paidTotal).coerceAtLeast(0.0)
+
+        LoanDetailStats(
+            totalInterest = totalInterest,
+            totalPrincipal = totalPrincipal,
+            totalAmount = totalAmount,
+            paidPrincipal = paidPrincipal,
+            paidInterest = paidInterest,
+            paidTotal = paidTotal,
+            remainingPrincipal = remainingPrincipal,
+            remainingInterest = remainingInterest,
+            remainingTotal = remainingTotal
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -225,20 +251,20 @@ fun LoanDetailScreen(
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("已收回本息", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("¥${String.format("%,.2f", paidTotal)}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
+                                Text("¥${String.format("%,.2f", detailStats.paidTotal)}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text("本金: ¥${String.format("%.2f", paidPrincipal)}", style = MaterialTheme.typography.bodySmall)
-                                Text("利息: ¥${String.format("%.2f", paidInterest)}", style = MaterialTheme.typography.bodySmall)
+                                Text("本金: ¥${String.format("%.2f", detailStats.paidPrincipal)}", style = MaterialTheme.typography.bodySmall)
+                                Text("利息: ¥${String.format("%.2f", detailStats.paidInterest)}", style = MaterialTheme.typography.bodySmall)
                             }
 
                             VerticalDivider(modifier = Modifier.height(70.dp).padding(horizontal = 16.dp))
 
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("剩余待收本息", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text("¥${String.format("%,.2f", remainingTotal)}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                Text("¥${String.format("%,.2f", detailStats.remainingTotal)}", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text("本金: ¥${String.format("%.2f", remainingPrincipal)}", style = MaterialTheme.typography.bodySmall)
-                                Text("利息: ¥${String.format("%.2f", remainingInterest)}", style = MaterialTheme.typography.bodySmall)
+                                Text("本金: ¥${String.format("%.2f", detailStats.remainingPrincipal)}", style = MaterialTheme.typography.bodySmall)
+                                Text("利息: ¥${String.format("%.2f", detailStats.remainingInterest)}", style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
