@@ -93,7 +93,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
             repaymentMethod = "每月等额",
             totalInterest = 0.0,
             status = "进行中",
-            note = "初始对外借款1"
+            note = "初始对外借款1",
+            loanSource = "支付宝借呗"
         )
         // Loan 2: 素 15000
         val l2 = Loan(
@@ -104,7 +105,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
             repaymentMethod = "每月等额",
             totalInterest = 600.0,
             status = "进行中",
-            note = "初始对外借款2"
+            note = "初始对外借款2",
+            loanSource = "招商银行信用卡"
         )
         // Loan 3: 李家辉 40000
         val l3 = Loan(
@@ -115,7 +117,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
             repaymentMethod = "先息后本",
             totalInterest = 2400.0,
             status = "进行中",
-            note = "初始对外借款3"
+            note = "初始对外借款3",
+            loanSource = "微粒贷"
         )
         // Loan 4: 辉新 85000
         val l4 = Loan(
@@ -126,7 +129,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
             repaymentMethod = "每月等额",
             totalInterest = 5000.0,
             status = "进行中",
-            note = "初始对外借款4"
+            note = "初始对外借款4",
+            loanSource = "自有资金"
         )
 
         repository.addLoanWithPlans(l1)
@@ -160,7 +164,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
         totalPeriods: Int,
         repaymentMethod: String,
         totalInterest: Double,
-        note: String
+        note: String,
+        loanSource: String
     ) {
         viewModelScope.launch {
             val loan = Loan(
@@ -171,7 +176,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
                 repaymentMethod = repaymentMethod,
                 totalInterest = totalInterest,
                 status = "进行中",
-                note = note
+                note = note,
+                loanSource = loanSource
             )
             repository.addLoanWithPlans(loan)
         }

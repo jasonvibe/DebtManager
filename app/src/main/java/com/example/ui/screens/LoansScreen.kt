@@ -67,7 +67,8 @@ fun LoansScreen(
             .filter { loan ->
                 // Search query filter
                 loan.borrowerName.contains(searchQuery, ignoreCase = true) ||
-                loan.note.contains(searchQuery, ignoreCase = true)
+                loan.note.contains(searchQuery, ignoreCase = true) ||
+                loan.loanSource.contains(searchQuery, ignoreCase = true)
             }
             .filter { loan ->
                 // Status filter
@@ -280,13 +281,34 @@ fun LoansScreen(
                                             fontSize = 20.sp,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
-                                        if (loan.note.isNotEmpty()) {
-                                            Text(
-                                                text = loan.note,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1
-                                            )
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                            modifier = Modifier.padding(top = 2.dp)
+                                        ) {
+                                            if (loan.loanSource.isNotEmpty()) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .clip(RoundedCornerShape(4.dp))
+                                                        .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f))
+                                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                ) {
+                                                    Text(
+                                                        text = loan.loanSource,
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                    )
+                                                }
+                                            }
+                                            if (loan.note.isNotEmpty()) {
+                                                Text(
+                                                    text = loan.note,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1
+                                                )
+                                            }
                                         }
                                     }
 

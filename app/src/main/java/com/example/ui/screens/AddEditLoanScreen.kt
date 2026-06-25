@@ -36,12 +36,13 @@ import com.example.util.DateUtils
 fun AddEditLoanScreen(
     loan: Loan?,
     onBackClick: () -> Unit,
-    onSaveClick: (borrowerName: String, principal: Double, loanDate: String, totalPeriods: Int, repaymentMethod: String, totalInterest: Double, note: String) -> Unit
+    onSaveClick: (borrowerName: String, principal: Double, loanDate: String, totalPeriods: Int, repaymentMethod: String, totalInterest: Double, note: String, loanSource: String) -> Unit
 ) {
     val isEditMode = loan != null
 
     var borrowerName by remember { mutableStateOf(loan?.borrowerName ?: "") }
     var principalStr by remember { mutableStateOf(loan?.principal?.toString() ?: "") }
+    var loanSource by remember { mutableStateOf(loan?.loanSource ?: "") }
     var loanDate by remember { mutableStateOf(loan?.loanDate ?: DateUtils.getCurrentDate()) }
     var totalPeriodsStr by remember { mutableStateOf(loan?.totalPeriods?.toString() ?: "12") }
     var repaymentMethod by remember { mutableStateOf(loan?.repaymentMethod ?: "每月等额") }
@@ -95,7 +96,7 @@ fun AddEditLoanScreen(
                                 errorMessage = "请填写有效的期数"
                                 showError = true
                             } else {
-                                onSaveClick(borrowerName.trim(), p, loanDate.trim(), periods, repaymentMethod, interest, note.trim())
+                                onSaveClick(borrowerName.trim(), p, loanDate.trim(), periods, repaymentMethod, interest, note.trim(), loanSource.trim())
                             }
                         },
                         modifier = Modifier.testTag("add_edit_save_button")
@@ -157,6 +158,38 @@ fun AddEditLoanScreen(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp)
             )
+
+            // Loan Source Input (NEW)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("借款来源", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                
+                // Quick chips
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("自有资金", "支付宝借呗", "微粒贷", "信用卡").forEach { sourceOption ->
+                        FilterChip(
+                            selected = loanSource == sourceOption,
+                            onClick = { loanSource = sourceOption },
+                            label = { Text(sourceOption) },
+                            modifier = Modifier.weight(1f).testTag("chip_source_$sourceOption")
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = loanSource,
+                    onValueChange = { loanSource = it },
+                    label = { Text("自定义/具体来源") },
+                    placeholder = { Text("例如：招商银行信用卡、京东白条") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("input_source"),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
 
             // Date input
             OutlinedTextField(

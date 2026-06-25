@@ -178,6 +178,13 @@ fun LoanDetailScreen(
                             }
                         }
 
+                        if (loan.loanSource.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.05f))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            DetailField(label = "借款资金来源", value = loan.loanSource)
+                        }
+
                         if (loan.note.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(12.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {

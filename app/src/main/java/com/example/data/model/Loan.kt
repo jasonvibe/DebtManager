@@ -17,7 +17,8 @@ data class Loan(
     val status: String, // "进行中" / "已结清"
     val note: String,
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val loanSource: String = ""
 )
 
 @Entity(
