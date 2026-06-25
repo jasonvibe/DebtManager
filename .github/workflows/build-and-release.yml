@@ -55,6 +55,19 @@ jobs:
       - name: Make Gradle Wrapper Executable
         run: chmod +x gradlew
 
+      - name: Set up Environment Files and Keystores
+        run: |
+          # Create an empty .env file so that Secrets Gradle Plugin doesn't complain about a missing file
+          touch .env
+          
+          # Decode the debug keystore if it is committed in base64 form
+          if [ -f "debug.keystore.base64" ]; then
+            echo "Decoding debug.keystore.base64 to debug.keystore..."
+            base64 --decode debug.keystore.base64 > debug.keystore
+          else
+            echo "debug.keystore.base64 not found, relying on default build setup."
+          fi
+
       - name: Build Android APK
         id: build_apk
         env:
