@@ -1,0 +1,6 @@
+{
+  "name": "借款跟踪管家",
+  "description": "一款完全本地管理的个人对外借款跟踪工具，支持还款计划生成、回款日历、数据统计，并支持通过坚果云WebDAV实现跨设备数据备份与同步。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
