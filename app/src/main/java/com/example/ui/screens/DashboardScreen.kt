@@ -113,23 +113,39 @@ fun DashboardScreen(
     }
 
     Scaffold(
-        topBar = {
-            LargeTopAppBar(
-                title = {
+        containerColor = MaterialTheme.colorScheme.background
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(bottom = innerPadding.calculateBottomPadding())
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            // --- Header Title with Sync ---
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Column {
                         Text(
                             text = "借款跟踪管家",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 28.sp
+                            fontWeight = FontWeight.Black,
+                            fontSize = 28.sp,
+                            color = MaterialTheme.colorScheme.onBackground
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "掌上财务，一目了然",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                         )
                     }
-                },
-                actions = {
                     IconButton(
                         onClick = onSyncClick,
                         modifier = Modifier.testTag("dashboard_sync_button")
@@ -140,21 +156,9 @@ fun DashboardScreen(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                },
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
+                }
+            }
+
             // --- Core Cards Grid ---
             item {
                 Text(
