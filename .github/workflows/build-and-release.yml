@@ -30,6 +30,8 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
 
       - name: Determine Versioning
         id: version
@@ -48,12 +50,6 @@ jobs:
           echo "VERSION_NAME=${VERSION_NAME}" >> $GITHUB_OUTPUT
           echo "IS_TAG=${IS_TAG}" >> $GITHUB_OUTPUT
           echo "TAG_NAME=v${VERSION_NAME}" >> $GITHUB_OUTPUT
-
-      - name: Generate Gradle Wrapper
-        run: gradle wrapper
-
-      - name: Make Gradle Wrapper Executable
-        run: chmod +x gradlew
 
       - name: Set up Environment Files and Keystores
         run: |
@@ -83,7 +79,7 @@ jobs:
             export KEYSTORE_PATH="$(pwd)/my-upload-key.jks"
             
             echo "Building Release APK..."
-            ./gradlew assembleRelease \
+            gradle assembleRelease \
               -PversionCode=${{ steps.version.outputs.VERSION_CODE }} \
               -PversionName=${{ steps.version.outputs.VERSION_NAME }}
             
@@ -96,7 +92,7 @@ jobs:
             echo "IS_RELEASE=true" >> $GITHUB_OUTPUT
           else
             echo "Release signing secrets not found or incomplete. Falling back to Debug APK..."
-            ./gradlew assembleDebug \
+            gradle assembleDebug \
               -PversionCode=${{ steps.version.outputs.VERSION_CODE }} \
               -PversionName=${{ steps.version.outputs.VERSION_NAME }}
             
@@ -135,6 +131,7 @@ jobs:
               --title "Release $TAG_NAME" \
               --notes "Automated release of Loan Tracker v${VERSION_NAME}. (Git Tag: $TAG_NAME, Build: ${{ github.run_number }})" \
               --target "${{ github.sha }}" \
+              --clobber \
               "$APK_DEST"
           else
             # Release triggered by branch push (main/master)
@@ -143,5 +140,6 @@ jobs:
               --notes "Automated continuous delivery build of Loan Tracker. (Branch: ${{ github.ref_name }}, Build: ${{ github.run_number }})" \
               --target "${{ github.sha }}" \
               --prerelease \
+              --clobber \
               "$APK_DEST"
           fi

@@ -84,10 +84,7 @@ fun MainAppScreen(viewModel: LoanViewModel) {
     )
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding(),
+        modifier = Modifier.fillMaxSize(),
         bottomBar = {
             if (isTopLevelRoute) {
                 NavigationBar(
