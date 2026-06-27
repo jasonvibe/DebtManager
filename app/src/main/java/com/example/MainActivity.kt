@@ -223,7 +223,7 @@ fun MainAppScreen(viewModel: LoanViewModel) {
                     onBackClick = {
                         navController.popBackStack()
                     },
-                    onSaveClick = { borrowerName, principal, loanDate, totalPeriods, repaymentMethod, totalInterest, note, loanSource, repaymentDay ->
+                    onSaveClick = { borrowerName, principal, loanDate, totalPeriods, repaymentMethod, totalInterest, note, loanSource, repaymentDay, monthlyRepaymentAmount ->
                         if (isEditMode(currentLoan)) {
                             // In edit mode we can update the loan fields
                             currentLoan?.let {
@@ -237,12 +237,13 @@ fun MainAppScreen(viewModel: LoanViewModel) {
                                     note = note,
                                     loanSource = loanSource,
                                     repaymentDay = repaymentDay,
+                                    monthlyRepaymentAmount = monthlyRepaymentAmount,
                                     updatedAt = System.currentTimeMillis()
                                 )
                                 viewModel.updateLoanWithRegeneratedPlans(updatedLoan)
                             }
                         } else {
-                            viewModel.addLoan(borrowerName, principal, loanDate, totalPeriods, repaymentMethod, totalInterest, note, loanSource, repaymentDay)
+                            viewModel.addLoan(borrowerName, principal, loanDate, totalPeriods, repaymentMethod, totalInterest, note, loanSource, repaymentDay, monthlyRepaymentAmount)
                         }
                         navController.popBackStack()
                     }

@@ -170,7 +170,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
         totalInterest: Double,
         note: String,
         loanSource: String,
-        repaymentDay: Int
+        repaymentDay: Int,
+        monthlyRepaymentAmount: Double = 0.0
     ) {
         viewModelScope.launch {
             val loan = Loan(
@@ -183,7 +184,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
                 status = "进行中",
                 note = note,
                 loanSource = loanSource,
-                repaymentDay = repaymentDay
+                repaymentDay = repaymentDay,
+                monthlyRepaymentAmount = monthlyRepaymentAmount
             )
             repository.addLoanWithPlans(loan)
         }
@@ -207,7 +209,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
                 repaymentMethod = loan.repaymentMethod,
                 totalInterest = loan.totalInterest,
                 startDate = loan.loanDate,
-                repaymentDay = loan.repaymentDay
+                repaymentDay = loan.repaymentDay,
+                monthlyRepaymentAmount = loan.monthlyRepaymentAmount
             )
             repository.updateLoanWithPlans(loan, plans)
         }

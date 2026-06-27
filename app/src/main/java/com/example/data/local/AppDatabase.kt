@@ -8,7 +8,7 @@ import com.example.data.model.Loan
 import com.example.data.model.RepaymentPlan
 import com.example.data.model.SyncRecord
 
-@Database(entities = [Loan::class, RepaymentPlan::class, SyncRecord::class], version = 3, exportSchema = false)
+@Database(entities = [Loan::class, RepaymentPlan::class, SyncRecord::class], version = 4, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun loanDao(): LoanDao
 

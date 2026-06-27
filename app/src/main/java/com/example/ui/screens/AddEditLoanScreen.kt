@@ -36,7 +36,7 @@ import com.example.util.DateUtils
 fun AddEditLoanScreen(
     loan: Loan?,
     onBackClick: () -> Unit,
-    onSaveClick: (borrowerName: String, principal: Double, loanDate: String, totalPeriods: Int, repaymentMethod: String, totalInterest: Double, note: String, loanSource: String, repaymentDay: Int) -> Unit
+    onSaveClick: (borrowerName: String, principal: Double, loanDate: String, totalPeriods: Int, repaymentMethod: String, totalInterest: Double, note: String, loanSource: String, repaymentDay: Int, monthlyRepaymentAmount: Double) -> Unit
 ) {
     val isEditMode = loan != null
 
@@ -52,28 +52,52 @@ fun AddEditLoanScreen(
     var totalPeriodsStr by remember { mutableStateOf(loan?.totalPeriods?.toString() ?: "12") }
     var repaymentMethod by remember { mutableStateOf(loan?.repaymentMethod ?: "每月等额") }
     var totalInterestStr by remember { mutableStateOf(loan?.totalInterest?.toString() ?: "0.0") }
+    var monthlyRepaymentAmountStr by remember {
+        mutableStateOf(
+            if (loan?.repaymentMethod == "固定金额" && loan.monthlyRepaymentAmount > 0) loan.monthlyRepaymentAmount.toString() else ""
+        )
+    }
     var note by remember { mutableStateOf(loan?.note ?: "") }
 
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    val livePreviewPlans = remember(principalStr, totalPeriodsStr, repaymentMethod, totalInterestStr, loanDate, repaymentDayStr) {
+    val livePreviewPlans = remember(principalStr, totalPeriodsStr, repaymentMethod, totalInterestStr, loanDate, repaymentDayStr, monthlyRepaymentAmountStr) {
         val p = principalStr.toDoubleOrNull() ?: 0.0
         val periods = totalPeriodsStr.toIntOrNull() ?: 0
         val interest = totalInterestStr.toDoubleOrNull() ?: 0.0
         val rDay = repaymentDayStr.toIntOrNull() ?: DateUtils.getDayOfDate(loanDate)
-        if (p > 0 && periods > 0 && rDay in 1..31) {
-            com.example.util.RepaymentPlanGenerator.generate(
-                loanId = 0L,
-                principal = p,
-                totalPeriods = periods,
-                repaymentMethod = repaymentMethod,
-                totalInterest = interest,
-                startDate = loanDate,
-                repaymentDay = rDay
-            )
+        val mAmt = monthlyRepaymentAmountStr.toDoubleOrNull() ?: 0.0
+
+        if (repaymentMethod == "固定金额") {
+            if (p > 0 && mAmt > 0 && rDay in 1..31) {
+                com.example.util.RepaymentPlanGenerator.generate(
+                    loanId = 0L,
+                    principal = p,
+                    totalPeriods = 0,
+                    repaymentMethod = repaymentMethod,
+                    totalInterest = interest,
+                    startDate = loanDate,
+                    repaymentDay = rDay,
+                    monthlyRepaymentAmount = mAmt
+                )
+            } else {
+                emptyList()
+            }
         } else {
-            emptyList()
+            if (p > 0 && periods > 0 && rDay in 1..31) {
+                com.example.util.RepaymentPlanGenerator.generate(
+                    loanId = 0L,
+                    principal = p,
+                    totalPeriods = periods,
+                    repaymentMethod = repaymentMethod,
+                    totalInterest = interest,
+                    startDate = loanDate,
+                    repaymentDay = rDay
+                )
+            } else {
+                emptyList()
+            }
         }
     }
 
@@ -90,15 +114,19 @@ fun AddEditLoanScreen(
                     IconButton(
                         onClick = {
                             val p = principalStr.toDoubleOrNull()
-                            val periods = totalPeriodsStr.toIntOrNull()
+                            val periods = if (repaymentMethod == "固定金额") livePreviewPlans.size else totalPeriodsStr.toIntOrNull()
                             val interest = totalInterestStr.toDoubleOrNull() ?: 0.0
                             val rDay = repaymentDayStr.toIntOrNull()
+                            val mAmt = monthlyRepaymentAmountStr.toDoubleOrNull() ?: 0.0
 
                             if (borrowerName.trim().isEmpty()) {
                                 errorMessage = "请填写借款人姓名"
                                 showError = true
                             } else if (p == null || p <= 0) {
                                 errorMessage = "请填写有效的借款本金"
+                                showError = true
+                            } else if (repaymentMethod == "固定金额" && mAmt <= 0) {
+                                errorMessage = "请填写有效的固定还款金额"
                                 showError = true
                             } else if (periods == null || periods <= 0) {
                                 errorMessage = "请填写有效的期数"
@@ -107,7 +135,18 @@ fun AddEditLoanScreen(
                                 errorMessage = "请填写有效的还款日 (1-31日)"
                                 showError = true
                             } else {
-                                onSaveClick(borrowerName.trim(), p, loanDate.trim(), periods, repaymentMethod, interest, note.trim(), loanSource.trim(), rDay)
+                                onSaveClick(
+                                    borrowerName.trim(),
+                                    p,
+                                    loanDate.trim(),
+                                    periods,
+                                    repaymentMethod,
+                                    interest,
+                                    note.trim(),
+                                    loanSource.trim(),
+                                    rDay,
+                                    if (repaymentMethod == "固定金额") mAmt else 0.0
+                                )
                             }
                         },
                         modifier = Modifier.testTag("add_edit_save_button")
@@ -240,35 +279,6 @@ fun AddEditLoanScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Total Periods Selector
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("还款期数", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf("3", "6", "12", "24").forEach { pOption ->
-                        FilterChip(
-                            selected = totalPeriodsStr == pOption,
-                            onClick = { totalPeriodsStr = pOption },
-                            label = { Text("${pOption}期") },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-                OutlinedTextField(
-                    value = totalPeriodsStr,
-                    onValueChange = { totalPeriodsStr = it; showError = false },
-                    label = { Text("自定义期数") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("input_periods"),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
-
             // Repayment Method
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("还款方式", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
@@ -276,7 +286,7 @@ fun AddEditLoanScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    listOf("每月等额", "先息后本", "自定义").forEach { mOption ->
+                    listOf("每月等额", "先息后本").forEach { mOption ->
                         FilterChip(
                             selected = repaymentMethod == mOption,
                             onClick = { repaymentMethod = mOption },
@@ -284,6 +294,98 @@ fun AddEditLoanScreen(
                             modifier = Modifier.weight(1f).testTag("chip_method_$mOption")
                         )
                     }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("固定金额", "自定义").forEach { mOption ->
+                        FilterChip(
+                            selected = repaymentMethod == mOption,
+                            onClick = { repaymentMethod = mOption },
+                            label = { Text(mOption) },
+                            modifier = Modifier.weight(1f).testTag("chip_method_$mOption")
+                        )
+                    }
+                }
+            }
+
+            // Repayment parameters conditional rendering
+            if (repaymentMethod == "固定金额") {
+                // Monthly Repayment Amount input (NEW)
+                OutlinedTextField(
+                    value = monthlyRepaymentAmountStr,
+                    onValueChange = { monthlyRepaymentAmountStr = it; showError = false },
+                    label = { Text("每月固定还款金额 (元) *") },
+                    placeholder = { Text("0.00") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("input_monthly_repayment_amount"),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                // Info card showing auto-calculated periods
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Calculate,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "还款期数 (自动计算)",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                            val periodsCount = livePreviewPlans.size
+                            Text(
+                                text = if (periodsCount > 0) "共计 $periodsCount 期" else "请输入借款本金和每月固定还款金额以计算期数",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+            } else {
+                // Total Periods Selector
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("还款期数", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("3", "6", "12", "24").forEach { pOption ->
+                            FilterChip(
+                                selected = totalPeriodsStr == pOption,
+                                onClick = { totalPeriodsStr = pOption },
+                                label = { Text("${pOption}期") },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                    OutlinedTextField(
+                        value = totalPeriodsStr,
+                        onValueChange = { totalPeriodsStr = it; showError = false },
+                        label = { Text("自定义期数") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_periods"),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp)
+                    )
                 }
             }
 

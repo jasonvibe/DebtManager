@@ -197,6 +197,9 @@ fun LoanDetailScreen(
                             Column(modifier = Modifier.weight(1f)) {
                                 DetailField(label = "借款日期", value = DateUtils.formatDisplayDate(loan.loanDate))
                                 DetailField(label = "还款方式", value = loan.repaymentMethod)
+                                if (loan.repaymentMethod == "固定金额" && loan.monthlyRepaymentAmount > 0.0) {
+                                    DetailField(label = "固定月还", value = "¥${String.format("%.2f", loan.monthlyRepaymentAmount)}")
+                                }
                             }
                             Column(modifier = Modifier.weight(1f)) {
                                 DetailField(label = "还款期数", value = "${loan.totalPeriods}期")

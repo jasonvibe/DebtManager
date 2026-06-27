@@ -21,9 +21,53 @@ object RepaymentPlanGenerator {
         repaymentMethod: String,
         totalInterest: Double,
         startDate: String,
-        repaymentDay: Int
+        repaymentDay: Int,
+        monthlyRepaymentAmount: Double = 0.0
     ): List<RepaymentPlan> {
         val plans = mutableListOf<RepaymentPlan>()
+
+        if (repaymentMethod == "固定金额") {
+            if (monthlyRepaymentAmount <= 0.0) return plans
+            val totalDebt = principal + totalInterest
+            val calculatedPeriods = Math.ceil(totalDebt / monthlyRepaymentAmount).toInt().coerceAtLeast(1)
+
+            val equalInterestPart = round(totalInterest / calculatedPeriods)
+            var accumulatedPrincipal = 0.0
+            var accumulatedInterest = 0.0
+
+            for (i in 1..calculatedPeriods) {
+                val dueDate = DateUtils.getDueDateForPeriod(startDate, i, repaymentDay)
+                val totalAmount: Double
+                val iPart: Double
+                val pPart: Double
+
+                if (i == calculatedPeriods) {
+                    totalAmount = round(totalDebt - (monthlyRepaymentAmount * (calculatedPeriods - 1)))
+                    iPart = round(totalInterest - accumulatedInterest)
+                    pPart = round(totalAmount - iPart)
+                } else {
+                    totalAmount = round(monthlyRepaymentAmount)
+                    iPart = equalInterestPart
+                    pPart = round(totalAmount - iPart)
+                    accumulatedPrincipal += pPart
+                    accumulatedInterest += iPart
+                }
+
+                plans.add(
+                    RepaymentPlan(
+                        loanId = loanId,
+                        periodNumber = i,
+                        dueDate = dueDate,
+                        totalAmount = totalAmount,
+                        principalPart = pPart,
+                        interestPart = iPart,
+                        status = "待收"
+                    )
+                )
+            }
+            return plans
+        }
+
         if (totalPeriods <= 0) return plans
 
         val equalPrincipalPart = round(principal / totalPeriods)

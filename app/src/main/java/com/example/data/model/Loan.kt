@@ -19,7 +19,8 @@ data class Loan(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val loanSource: String = "",
-    val repaymentDay: Int = 15
+    val repaymentDay: Int = 15,
+    val monthlyRepaymentAmount: Double = 0.0
 )
 
 @Entity(

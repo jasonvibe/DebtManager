@@ -43,7 +43,8 @@ class LoanRepository(private val loanDao: LoanDao) {
         repaymentMethod: String,
         totalInterest: Double,
         startDate: String,
-        repaymentDay: Int
+        repaymentDay: Int,
+        monthlyRepaymentAmount: Double = 0.0
     ): List<RepaymentPlan> {
         return com.example.util.RepaymentPlanGenerator.generate(
             loanId = loanId,
@@ -52,7 +53,8 @@ class LoanRepository(private val loanDao: LoanDao) {
             repaymentMethod = repaymentMethod,
             totalInterest = totalInterest,
             startDate = startDate,
-            repaymentDay = repaymentDay
+            repaymentDay = repaymentDay,
+            monthlyRepaymentAmount = monthlyRepaymentAmount
         )
     }
 
@@ -66,7 +68,8 @@ class LoanRepository(private val loanDao: LoanDao) {
                 repaymentMethod = loan.repaymentMethod,
                 totalInterest = loan.totalInterest,
                 startDate = loan.loanDate,
-                repaymentDay = loan.repaymentDay
+                repaymentDay = loan.repaymentDay,
+                monthlyRepaymentAmount = loan.monthlyRepaymentAmount
             )
         loanDao.insertRepaymentPlans(plans)
         checkAndUpdateLoanStatus(loanId)
