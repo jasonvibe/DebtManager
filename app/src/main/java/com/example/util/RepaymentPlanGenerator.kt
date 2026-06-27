@@ -30,19 +30,26 @@ object RepaymentPlanGenerator {
             if (monthlyRepaymentAmount <= 0.0) return plans
             val totalDebt = principal + totalInterest
             val calculatedPeriods = Math.ceil(totalDebt / monthlyRepaymentAmount).toInt().coerceAtLeast(1)
+            
+            val actualPeriods = if (totalPeriods > 0) {
+                Math.min(totalPeriods, calculatedPeriods)
+            } else {
+                calculatedPeriods
+            }
 
-            val equalInterestPart = round(totalInterest / calculatedPeriods)
+            val equalInterestPart = round(totalInterest / actualPeriods)
             var accumulatedPrincipal = 0.0
             var accumulatedInterest = 0.0
+            var accumulatedTotal = 0.0
 
-            for (i in 1..calculatedPeriods) {
+            for (i in 1..actualPeriods) {
                 val dueDate = DateUtils.getDueDateForPeriod(startDate, i, repaymentDay)
                 val totalAmount: Double
                 val iPart: Double
                 val pPart: Double
 
-                if (i == calculatedPeriods) {
-                    totalAmount = round(totalDebt - (monthlyRepaymentAmount * (calculatedPeriods - 1)))
+                if (i == actualPeriods) {
+                    totalAmount = round(totalDebt - accumulatedTotal)
                     iPart = round(totalInterest - accumulatedInterest)
                     pPart = round(totalAmount - iPart)
                 } else {
@@ -51,6 +58,7 @@ object RepaymentPlanGenerator {
                     pPart = round(totalAmount - iPart)
                     accumulatedPrincipal += pPart
                     accumulatedInterest += iPart
+                    accumulatedTotal += totalAmount
                 }
 
                 plans.add(

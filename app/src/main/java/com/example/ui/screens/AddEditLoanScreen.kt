@@ -344,49 +344,53 @@ fun AddEditLoanScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "还款期数 (自动计算)",
+                                text = "还款期数详情",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                             val periodsCount = livePreviewPlans.size
                             Text(
-                                text = if (periodsCount > 0) "共计 $periodsCount 期" else "请输入借款本金和每月固定还款金额以计算期数",
+                                text = if (periodsCount > 0) "自动推算为共计 $periodsCount 期还款计划" else "请输入本金、还款期数和每月固定还款金额",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
                             )
                         }
                     }
                 }
-            } else {
-                // Total Periods Selector
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("还款期数", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        listOf("3", "6", "12", "24").forEach { pOption ->
-                            FilterChip(
-                                selected = totalPeriodsStr == pOption,
-                                onClick = { totalPeriodsStr = pOption },
-                                label = { Text("${pOption}期") },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+            }
+
+            // Total Periods Selector (Always visible so users can customize number of periods!)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = if (repaymentMethod == "固定金额") "最大还款期数限制 (自定义期数)" else "还款期数 *",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("3", "6", "12", "24").forEach { pOption ->
+                        FilterChip(
+                            selected = totalPeriodsStr == pOption,
+                            onClick = { totalPeriodsStr = pOption; showError = false },
+                            label = { Text("${pOption}期") },
+                            modifier = Modifier.weight(1f)
+                        )
                     }
-                    OutlinedTextField(
-                        value = totalPeriodsStr,
-                        onValueChange = { totalPeriodsStr = it; showError = false },
-                        label = { Text("自定义期数") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("input_periods"),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp)
-                    )
                 }
+                OutlinedTextField(
+                    value = totalPeriodsStr,
+                    onValueChange = { totalPeriodsStr = it; showError = false },
+                    label = { Text(if (repaymentMethod == "固定金额") "自定义期数 (可选：限制最长多少期)" else "自定义期数 *") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("input_periods"),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
             }
 
             // Total Interest input
