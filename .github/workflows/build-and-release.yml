@@ -1,5 +1,5 @@
 name: Build and Release APK
-# Version 1.0.1 - Added robust keystore fallback generation for seamless automated build and release.
+# Version 1.0.2 - Removed unsupported --clobber flag and added automatic pre-existing release deletion before recreation.
 
 on:
   push:
@@ -167,13 +167,16 @@ jobs:
           echo "Creating/Updating GitHub Release for tag: $TAG_NAME"
           echo "Target APK file: ${{ env.APK_DEST }}"
           
+          # Delete pre-existing release to avoid conflicts (since --clobber is not supported in this environment's gh CLI)
+          echo "Cleaning up any pre-existing release to prevent conflicts..."
+          gh release delete "$TAG_NAME" --yes || echo "No pre-existing release found to delete."
+          
           if [ "$IS_TAG" = "true" ]; then
             # Release triggered by a Git tag push
             gh release create "$TAG_NAME" \
               --title "Release $TAG_NAME" \
               --notes "Automated release of Loan Tracker v${VERSION_NAME}. (Build: #${{ github.run_number }}, Commit: ${{ github.sha }})" \
               --target "${{ github.sha }}" \
-              --clobber \
               "${{ env.APK_DEST }}"
           else
             # Release triggered by branch push (main/master)
@@ -182,7 +185,6 @@ jobs:
               --notes "Automated continuous delivery build of Loan Tracker. (Branch: ${{ github.ref_name }}, Build: #${{ github.run_number }}, Commit: ${{ github.sha }})" \
               --target "${{ github.sha }}" \
               --prerelease \
-              --clobber \
               "${{ env.APK_DEST }}"
           fi
           
