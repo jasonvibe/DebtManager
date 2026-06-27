@@ -20,7 +20,8 @@ object RepaymentPlanGenerator {
         totalPeriods: Int,
         repaymentMethod: String,
         totalInterest: Double,
-        startDate: String
+        startDate: String,
+        repaymentDay: Int
     ): List<RepaymentPlan> {
         val plans = mutableListOf<RepaymentPlan>()
         if (totalPeriods <= 0) return plans
@@ -32,7 +33,7 @@ object RepaymentPlanGenerator {
         var accumulatedInterest = 0.0
 
         for (i in 1..totalPeriods) {
-            val dueDate = DateUtils.addMonths(startDate, i)
+            val dueDate = DateUtils.getDueDateForPeriod(startDate, i, repaymentDay)
             var pPart = 0.0
             var iPart = 0.0
 

@@ -54,4 +54,32 @@ object DateUtils {
             dateStr
         }
     }
+
+    fun getDueDateForPeriod(startDateStr: String, periodIndex: Int, repaymentDay: Int): String {
+        return try {
+            val date = sdf.parse(startDateStr) ?: Date()
+            val cal = Calendar.getInstance()
+            cal.time = date
+            cal.add(Calendar.MONTH, periodIndex)
+            
+            val maxDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+            val targetDay = if (repaymentDay > maxDay) maxDay else repaymentDay
+            cal.set(Calendar.DAY_OF_MONTH, targetDay)
+            
+            sdf.format(cal.time)
+        } catch (e: Exception) {
+            startDateStr
+        }
+    }
+
+    fun getDayOfDate(dateStr: String): Int {
+        return try {
+            val date = sdf.parse(dateStr) ?: Date()
+            val cal = Calendar.getInstance()
+            cal.time = date
+            cal.get(Calendar.DAY_OF_MONTH)
+        } catch (e: Exception) {
+            15
+        }
+    }
 }

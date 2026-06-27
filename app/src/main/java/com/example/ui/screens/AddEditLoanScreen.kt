@@ -36,7 +36,7 @@ import com.example.util.DateUtils
 fun AddEditLoanScreen(
     loan: Loan?,
     onBackClick: () -> Unit,
-    onSaveClick: (borrowerName: String, principal: Double, loanDate: String, totalPeriods: Int, repaymentMethod: String, totalInterest: Double, note: String, loanSource: String) -> Unit
+    onSaveClick: (borrowerName: String, principal: Double, loanDate: String, totalPeriods: Int, repaymentMethod: String, totalInterest: Double, note: String, loanSource: String, repaymentDay: Int) -> Unit
 ) {
     val isEditMode = loan != null
 
@@ -44,6 +44,11 @@ fun AddEditLoanScreen(
     var principalStr by remember { mutableStateOf(loan?.principal?.toString() ?: "") }
     var loanSource by remember { mutableStateOf(loan?.loanSource ?: "") }
     var loanDate by remember { mutableStateOf(loan?.loanDate ?: DateUtils.getCurrentDate()) }
+    var repaymentDayStr by remember {
+        mutableStateOf(
+            loan?.repaymentDay?.toString() ?: DateUtils.getDayOfDate(loanDate).toString()
+        )
+    }
     var totalPeriodsStr by remember { mutableStateOf(loan?.totalPeriods?.toString() ?: "12") }
     var repaymentMethod by remember { mutableStateOf(loan?.repaymentMethod ?: "每月等额") }
     var totalInterestStr by remember { mutableStateOf(loan?.totalInterest?.toString() ?: "0.0") }
@@ -52,18 +57,20 @@ fun AddEditLoanScreen(
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    val livePreviewPlans = remember(principalStr, totalPeriodsStr, repaymentMethod, totalInterestStr, loanDate) {
+    val livePreviewPlans = remember(principalStr, totalPeriodsStr, repaymentMethod, totalInterestStr, loanDate, repaymentDayStr) {
         val p = principalStr.toDoubleOrNull() ?: 0.0
         val periods = totalPeriodsStr.toIntOrNull() ?: 0
         val interest = totalInterestStr.toDoubleOrNull() ?: 0.0
-        if (p > 0 && periods > 0) {
+        val rDay = repaymentDayStr.toIntOrNull() ?: DateUtils.getDayOfDate(loanDate)
+        if (p > 0 && periods > 0 && rDay in 1..31) {
             com.example.util.RepaymentPlanGenerator.generate(
                 loanId = 0L,
                 principal = p,
                 totalPeriods = periods,
                 repaymentMethod = repaymentMethod,
                 totalInterest = interest,
-                startDate = loanDate
+                startDate = loanDate,
+                repaymentDay = rDay
             )
         } else {
             emptyList()
@@ -85,6 +92,7 @@ fun AddEditLoanScreen(
                             val p = principalStr.toDoubleOrNull()
                             val periods = totalPeriodsStr.toIntOrNull()
                             val interest = totalInterestStr.toDoubleOrNull() ?: 0.0
+                            val rDay = repaymentDayStr.toIntOrNull()
 
                             if (borrowerName.trim().isEmpty()) {
                                 errorMessage = "请填写借款人姓名"
@@ -95,8 +103,11 @@ fun AddEditLoanScreen(
                             } else if (periods == null || periods <= 0) {
                                 errorMessage = "请填写有效的期数"
                                 showError = true
+                            } else if (rDay == null || rDay !in 1..31) {
+                                errorMessage = "请填写有效的还款日 (1-31日)"
+                                showError = true
                             } else {
-                                onSaveClick(borrowerName.trim(), p, loanDate.trim(), periods, repaymentMethod, interest, note.trim(), loanSource.trim())
+                                onSaveClick(borrowerName.trim(), p, loanDate.trim(), periods, repaymentMethod, interest, note.trim(), loanSource.trim(), rDay)
                             }
                         },
                         modifier = Modifier.testTag("add_edit_save_button")
@@ -194,13 +205,37 @@ fun AddEditLoanScreen(
             // Date input
             OutlinedTextField(
                 value = loanDate,
-                onValueChange = { loanDate = it; showError = false },
+                onValueChange = {
+                    loanDate = it
+                    showError = false
+                    val day = DateUtils.getDayOfDate(it)
+                    if (day in 1..31) {
+                        repaymentDayStr = day.toString()
+                    }
+                },
                 label = { Text("借款日期 (YYYY-MM-DD) *") },
                 placeholder = { Text("2026-06-25") },
                 leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("input_date"),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp)
+            )
+
+            // Repayment Day input (NEW)
+            OutlinedTextField(
+                value = repaymentDayStr,
+                onValueChange = {
+                    repaymentDayStr = it
+                    showError = false
+                },
+                label = { Text("每月还款日 (1-31日) *") },
+                placeholder = { Text("例如：15") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("input_repayment_day"),
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp)
             )

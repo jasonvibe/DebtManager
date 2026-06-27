@@ -201,6 +201,7 @@ fun LoanDetailScreen(
                             Column(modifier = Modifier.weight(1f)) {
                                 DetailField(label = "还款期数", value = "${loan.totalPeriods}期")
                                 DetailField(label = "约定利息", value = "¥${String.format("%.2f", loan.totalInterest)}")
+                                DetailField(label = "每月还款日", value = "${loan.repaymentDay}日")
                             }
                         }
 

@@ -94,7 +94,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
             totalInterest = 0.0,
             status = "进行中",
             note = "初始对外借款1",
-            loanSource = "支付宝借呗"
+            loanSource = "支付宝借呗",
+            repaymentDay = 15
         )
         // Loan 2: 素 15000
         val l2 = Loan(
@@ -106,7 +107,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
             totalInterest = 600.0,
             status = "进行中",
             note = "初始对外借款2",
-            loanSource = "招商银行信用卡"
+            loanSource = "招商银行信用卡",
+            repaymentDay = 1
         )
         // Loan 3: 李家辉 40000
         val l3 = Loan(
@@ -118,7 +120,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
             totalInterest = 2400.0,
             status = "进行中",
             note = "初始对外借款3",
-            loanSource = "微粒贷"
+            loanSource = "微粒贷",
+            repaymentDay = 10
         )
         // Loan 4: 辉新 85000
         val l4 = Loan(
@@ -130,7 +133,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
             totalInterest = 5000.0,
             status = "进行中",
             note = "初始对外借款4",
-            loanSource = "自有资金"
+            loanSource = "自有资金",
+            repaymentDay = 10
         )
 
         repository.addLoanWithPlans(l1)
@@ -165,7 +169,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
         repaymentMethod: String,
         totalInterest: Double,
         note: String,
-        loanSource: String
+        loanSource: String,
+        repaymentDay: Int
     ) {
         viewModelScope.launch {
             val loan = Loan(
@@ -177,7 +182,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
                 totalInterest = totalInterest,
                 status = "进行中",
                 note = note,
-                loanSource = loanSource
+                loanSource = loanSource,
+                repaymentDay = repaymentDay
             )
             repository.addLoanWithPlans(loan)
         }
@@ -200,7 +206,8 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
                 totalPeriods = loan.totalPeriods,
                 repaymentMethod = loan.repaymentMethod,
                 totalInterest = loan.totalInterest,
-                startDate = loan.loanDate
+                startDate = loan.loanDate,
+                repaymentDay = loan.repaymentDay
             )
             repository.updateLoanWithPlans(loan, plans)
         }
