@@ -1,0 +1,16 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Declare files that must have LF line endings
+*.sh text eol=lf
+*.bat text eol=crlf
+gradlew text eol=lf
+
+# Explicitly mark binary files so Git never modifies their line endings
+*.jar binary
+*.png binary
+*.jpg binary
+*.webp binary
+*.gif binary
+*.keystore binary
+*.jks binary

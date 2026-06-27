@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -62,6 +63,7 @@ fun SettingsScreen(
 
     var showGuide by remember { mutableStateOf(false) }
     var showRestoreConfirm by remember { mutableStateOf(false) }
+    var showCredentialsConfigDialog by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
 
     // Version update check states
@@ -120,82 +122,54 @@ fun SettingsScreen(
                     ),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primaryContainer)
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primaryContainer)
-                                        .padding(8.dp),
-                                    contentAlignment = Alignment.Center
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Info,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
+                                    Text(
+                                        text = "系统版本与更新",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                                 Text(
-                                    text = "系统版本与更新",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(MaterialTheme.colorScheme.primaryContainer)
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Text(
-                                    text = "最新版",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    text = "当前软件版本: v1.0.3",
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "当前软件版本",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                                    .padding(horizontal = 10.dp, vertical = 4.dp)
-                            ) {
-                                Text(
-                                    text = "v1.0.3",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                )
-                            }
-                        }
-
-                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f))
 
                         Button(
                             onClick = {
@@ -207,31 +181,29 @@ fun SettingsScreen(
                                 }
                             },
                             enabled = !checkingUpdate,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             ),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(38.dp)
                         ) {
                             if (checkingUpdate) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(18.dp),
+                                    modifier = Modifier.size(16.dp),
                                     strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.onPrimary
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("正在检测新版本...", fontSize = 15.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("检测中", fontSize = 13.sp)
                             } else {
                                 Icon(
                                     imageVector = Icons.Default.Refresh,
                                     contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(14.dp)
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("立即检测新版本", fontSize = 15.sp)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("检查更新", fontSize = 13.sp)
                             }
                         }
                     }
@@ -296,7 +268,7 @@ fun SettingsScreen(
                 }
             }
 
-            // --- Jianguoyun Credentials Card ---
+            // --- Jianguoyun Credentials Card (Hidden behind Button) ---
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -304,177 +276,55 @@ fun SettingsScreen(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showCredentialsConfigDialog = true }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primaryContainer)
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primaryContainer)
-                                        .padding(8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Sync,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
+                                Icon(
+                                    imageVector = Icons.Default.Sync,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Column {
                                 Text(
                                     text = "坚果云 WebDAV 同步配置",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
-                            }
-                            IconButton(onClick = { showGuide = !showGuide }) {
-                                Icon(
-                                    imageVector = Icons.Default.HelpOutline,
-                                    contentDescription = "使用帮助",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-
-                        // Guide details dropdown
-                        AnimatedVisibility(visible = showGuide) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f))
-                                    .border(
-                                        width = 1.dp,
-                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                                        shape = RoundedCornerShape(12.dp)
-                                    )
-                                    .padding(14.dp)
-                             ) {
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "如何配置坚果云 WebDAV 同步？\n\n" +
-                                            "1️⃣ 打开坚果云网页版，点击右上角【账户信息】\n" +
-                                            "2️⃣ 选择【安全选项】页面\n" +
-                                            "3️⃣ 在最下方【第三方应用管理】中点击【添加应用密码】\n" +
-                                            "4️⃣ 输入应用名称，生成一个【应用密码】（格式如: abcd-efgh-ijkl-mnop）\n" +
-                                            "5️⃣ 在本页面输入坚果云注册邮箱（账号）和生成的应用密码，保存即可实现同步功能。",
-                                    fontSize = 12.sp,
-                                    lineHeight = 20.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = if (jianguoUser.isEmpty()) "未配置同步账号，点击前往配置" else "已配置账号: $jianguoUser",
+                                    fontSize = 13.sp,
+                                    color = if (jianguoUser.isEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
-
-                        OutlinedTextField(
-                            value = user,
-                            onValueChange = { user = it },
-                            label = { Text("坚果云账号 (邮箱)") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("settings_username"),
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp)
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = "前往配置",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                            modifier = Modifier.size(20.dp)
                         )
-
-                        OutlinedTextField(
-                            value = pass,
-                            onValueChange = { pass = it },
-                            label = { Text("第三方应用密码") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Lock,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            },
-                            trailingIcon = {
-                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                    Icon(
-                                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = if (passwordVisible) "隐藏密码" else "显示密码"
-                                    )
-                                }
-                            },
-                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("settings_password"),
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp)
-                        )
-
-                        OutlinedTextField(
-                            value = url,
-                            onValueChange = { url = it },
-                            label = { Text("服务器 WebDAV URL") },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Link,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("settings_url"),
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Button(
-                                onClick = {
-                                    onSaveCredentials(user.trim(), pass.trim(), url.trim())
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp)
-                                    .testTag("settings_save_button"),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Icon(Icons.Default.Save, contentDescription = null)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("保存配置")
-                            }
-
-                            Button(
-                                onClick = {
-                                    onSaveCredentials(user.trim(), pass.trim(), url.trim())
-                                    onTestConnection()
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                                modifier = Modifier
-                                    .weight(1.3f)
-                                    .height(48.dp)
-                                    .testTag("settings_test_button"),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Icon(Icons.Default.Refresh, contentDescription = null)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("测试连接")
-                            }
-                        }
                     }
                 }
             }
@@ -786,6 +636,185 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showRestoreConfirm = false }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
+    // --- Jianguoyun Credentials Configuration Dialog ---
+    if (showCredentialsConfigDialog) {
+        AlertDialog(
+            onDismissRequest = { showCredentialsConfigDialog = false },
+            title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Sync,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text("坚果云 WebDAV 同步设置")
+                }
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "配置参数",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        IconButton(onClick = { showGuide = !showGuide }) {
+                            Icon(
+                                imageVector = Icons.Default.HelpOutline,
+                                contentDescription = "使用帮助",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+
+                    // Guide details dropdown
+                    AnimatedVisibility(visible = showGuide) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f))
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .padding(12.dp)
+                        ) {
+                            Text(
+                                text = "如何配置坚果云 WebDAV 同步？\n\n" +
+                                        "1️⃣ 打开坚果云网页版，点击右上角【账户信息】\n" +
+                                        "2️⃣ 选择【安全选项】页面\n" +
+                                        "3️⃣ 在最下方【第三方应用管理】中点击【添加应用密码】\n" +
+                                        "4️⃣ 输入应用名称，生成一个【应用密码】（格式如: abcd-efgh-ijkl-mnop）\n" +
+                                        "5️⃣ 在此处输入坚果云注册邮箱和生成的应用密码，保存即可实现同步功能。",
+                                fontSize = 11.sp,
+                                lineHeight = 18.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = user,
+                        onValueChange = { user = it },
+                        label = { Text("坚果云账号 (邮箱)") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("settings_username"),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = pass,
+                        onValueChange = { pass = it },
+                        label = { Text("第三方应用密码") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
+                        trailingIcon = {
+                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Icon(
+                                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = if (passwordVisible) "隐藏密码" else "显示密码"
+                                )
+                            }
+                        },
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("settings_password"),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    OutlinedTextField(
+                        value = url,
+                        onValueChange = { url = it },
+                        label = { Text("服务器 WebDAV URL") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Link,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("settings_url"),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TextButton(
+                        onClick = {
+                            onSaveCredentials(user.trim(), pass.trim(), url.trim())
+                            onTestConnection()
+                        },
+                        modifier = Modifier
+                            .weight(1.2f)
+                            .testTag("settings_test_button")
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("保存并测试")
+                    }
+
+                    Button(
+                        onClick = {
+                            onSaveCredentials(user.trim(), pass.trim(), url.trim())
+                            showCredentialsConfigDialog = false
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("settings_save_button")
+                    ) {
+                        Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("保存")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showCredentialsConfigDialog = false }
+                ) {
                     Text("取消")
                 }
             }
