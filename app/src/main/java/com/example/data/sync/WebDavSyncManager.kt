@@ -39,11 +39,49 @@ class WebDavSyncManager {
         return url
     }
 
+    private suspend fun resolveEffectiveBaseUrl(serverUrl: String, authHeader: String): String = withContext(Dispatchers.IO) {
+        var url = serverUrl.trim()
+        if (!url.endsWith("/")) {
+            url += "/"
+        }
+        if (url.contains("dav.jianguoyun.com") && url.endsWith("/dav/")) {
+            // Probe Chinese default first
+            val chineseUrl = url + "我的坚果云/"
+            if (probeDirectory(chineseUrl, authHeader)) {
+                return@withContext chineseUrl
+            }
+            // Probe English default second
+            val englishUrl = url + "My Nutstore/"
+            if (probeDirectory(englishUrl, authHeader)) {
+                return@withContext englishUrl
+            }
+            // Fallback to chineseUrl
+            return@withContext chineseUrl
+        }
+        return@withContext url
+    }
+
+    private fun probeDirectory(url: String, authHeader: String): Boolean {
+        return try {
+            val request = Request.Builder()
+                .url(url)
+                .header("Authorization", authHeader)
+                .header("Depth", "0")
+                .method("PROPFIND", "".toRequestBody("text/xml".toMediaType()))
+                .build()
+            client.newCall(request).execute().use { response ->
+                response.isSuccessful || response.code == 207 || response.code == 301 || response.code == 200
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     suspend fun testConnection(username: String, appPassword: String, serverUrl: String): Result<Unit> =
         withContext(Dispatchers.IO) {
             try {
-                val baseUrl = sanitizeUrl(serverUrl)
                 val authHeader = getAuthHeader(username, appPassword)
+                val baseUrl = resolveEffectiveBaseUrl(serverUrl, authHeader)
 
                 val request = Request.Builder()
                     .url(baseUrl)
@@ -72,9 +110,9 @@ class WebDavSyncManager {
         remoteFileName: String = "loantracker_sync.json"
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
-            val baseUrl = sanitizeUrl(serverUrl)
-            val fileUrl = "$baseUrl$remoteFileName"
             val authHeader = getAuthHeader(username, appPassword)
+            val baseUrl = resolveEffectiveBaseUrl(serverUrl, authHeader)
+            val fileUrl = "$baseUrl$remoteFileName"
 
             // Ensure backup folder directory exists by executing MKCOL if needed
             // However, Jianguoyun root dav directory usually allows creating files directly at /dav/loantracker_sync.json
@@ -106,9 +144,9 @@ class WebDavSyncManager {
         remoteFileName: String = "loantracker_sync.json"
     ): Result<BackupData> = withContext(Dispatchers.IO) {
         try {
-            val baseUrl = sanitizeUrl(serverUrl)
-            val fileUrl = "$baseUrl$remoteFileName"
             val authHeader = getAuthHeader(username, appPassword)
+            val baseUrl = resolveEffectiveBaseUrl(serverUrl, authHeader)
+            val fileUrl = "$baseUrl$remoteFileName"
 
             val request = Request.Builder()
                 .url(fileUrl)

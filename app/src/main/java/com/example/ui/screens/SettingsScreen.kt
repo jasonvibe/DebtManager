@@ -645,7 +645,10 @@ fun SettingsScreen(
     // --- Jianguoyun Credentials Configuration Dialog ---
     if (showCredentialsConfigDialog) {
         AlertDialog(
-            onDismissRequest = { showCredentialsConfigDialog = false },
+            onDismissRequest = {
+                showCredentialsConfigDialog = false
+                onResetStatus()
+            },
             title = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -774,6 +777,66 @@ fun SettingsScreen(
                         singleLine = true,
                         shape = RoundedCornerShape(12.dp)
                     )
+
+                    // Display connection test status inside the dialog so the user has immediate feedback!
+                    if (syncStatus !is SyncStatus.Idle) {
+                        val (containerColor, textColor, icon) = when (syncStatus) {
+                            is SyncStatus.Success -> Triple(Color(0xFFE8F5E9), Color(0xFF2E7D32), Icons.Default.CloudDone)
+                            is SyncStatus.Error -> Triple(MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.onErrorContainer, Icons.Default.Info)
+                            is SyncStatus.Loading -> Triple(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f), MaterialTheme.colorScheme.onPrimaryContainer, Icons.Default.Sync)
+                            else -> Triple(Color.Transparent, Color.Black, Icons.Default.Info)
+                        }
+
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = containerColor),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Start
+                            ) {
+                                if (syncStatus is SyncStatus.Loading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp,
+                                        color = textColor
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        tint = textColor,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = when (syncStatus) {
+                                        is SyncStatus.Loading -> syncStatus.message
+                                        is SyncStatus.Success -> syncStatus.message
+                                        is SyncStatus.Error -> syncStatus.message
+                                        else -> ""
+                                    },
+                                    color = textColor,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                if (syncStatus !is SyncStatus.Loading) {
+                                    IconButton(
+                                        onClick = onResetStatus,
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Text("清除", style = MaterialTheme.typography.labelSmall, color = textColor)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -799,6 +862,7 @@ fun SettingsScreen(
                         onClick = {
                             onSaveCredentials(user.trim(), pass.trim(), url.trim())
                             showCredentialsConfigDialog = false
+                            onResetStatus()
                         },
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier
@@ -813,7 +877,10 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showCredentialsConfigDialog = false }
+                    onClick = {
+                        showCredentialsConfigDialog = false
+                        onResetStatus()
+                    }
                 ) {
                     Text("取消")
                 }
