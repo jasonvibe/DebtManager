@@ -64,6 +64,10 @@ jobs:
             echo "debug.keystore.base64 not found, relying on default build setup."
           fi
 
+      - name: Repair Gradle Wrapper JAR
+        run: |
+          gradle wrapper
+
       - name: Make Gradle Wrapper Executable
         run: chmod +x gradlew
 
