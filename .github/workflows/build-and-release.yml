@@ -1,4 +1,5 @@
 name: Build and Release APK
+# Version 1.0.1 - Added robust keystore fallback generation for seamless automated build and release.
 
 on:
   push:
