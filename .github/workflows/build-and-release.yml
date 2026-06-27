@@ -156,18 +156,36 @@ jobs:
           path: ${{ env.APK_DEST }}
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.version.outputs.TAG_NAME }}
-          name: ${{ steps.version.outputs.IS_TAG == 'true' && format('Release {0}', steps.version.outputs.TAG_NAME) || format('Automated Build {0}', steps.version.outputs.TAG_NAME) }}
-          draft: false
-          prerelease: ${{ steps.version.outputs.IS_TAG != 'true' }}
-          files: ${{ env.APK_DEST }}
-          body: |
-            Automated build of Loan Tracker.
-            - **Version**: v${{ steps.version.outputs.VERSION_NAME }}
-            - **Build Number**: #${{ github.run_number }}
-            - **Commit**: ${{ github.sha }}
-            - **Branch**: ${{ github.ref_name }}
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="${{ steps.version.outputs.TAG_NAME }}"
+          VERSION_NAME="${{ steps.version.outputs.VERSION_NAME }}"
+          IS_TAG="${{ steps.version.outputs.IS_TAG }}"
+          
+          echo "Creating/Updating GitHub Release for tag: $TAG_NAME"
+          echo "Target APK file: ${{ env.APK_DEST }}"
+          
+          if [ "$IS_TAG" = "true" ]; then
+            # Release triggered by a Git tag push
+            gh release create "$TAG_NAME" \
+              --title "Release $TAG_NAME" \
+              --notes "Automated release of Loan Tracker v${VERSION_NAME}. (Build: #${{ github.run_number }}, Commit: ${{ github.sha }})" \
+              --target "${{ github.sha }}" \
+              --clobber \
+              "${{ env.APK_DEST }}"
+          else
+            # Release triggered by branch push (main/master)
+            gh release create "$TAG_NAME" \
+              --title "Automated Build $TAG_NAME" \
+              --notes "Automated continuous delivery build of Loan Tracker. (Branch: ${{ github.ref_name }}, Build: #${{ github.run_number }}, Commit: ${{ github.sha }})" \
+              --target "${{ github.sha }}" \
+              --prerelease \
+              --clobber \
+              "${{ env.APK_DEST }}"
+          fi
+          
+          echo "=== VERIFYING CREATED RELEASE ==="
+          gh release view "$TAG_NAME"
+
