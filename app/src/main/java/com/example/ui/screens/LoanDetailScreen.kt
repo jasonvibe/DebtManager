@@ -202,7 +202,9 @@ fun LoanDetailScreen(
                                 }
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                DetailField(label = "还款期数", value = "${loan.totalPeriods}期")
+                                val totalCount = if (repaymentPlans.isNotEmpty()) repaymentPlans.size else loan.totalPeriods
+                                val remainingCount = if (repaymentPlans.isNotEmpty()) repaymentPlans.count { it.status != "已收" } else loan.totalPeriods
+                                DetailField(label = "还款期数", value = "$remainingCount/$totalCount")
                                 DetailField(label = "约定利息", value = "¥${String.format("%.2f", loan.totalInterest)}")
                                 DetailField(label = "每月还款日", value = "${loan.repaymentDay}日")
                             }
