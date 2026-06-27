@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -55,7 +56,8 @@ fun SettingsScreen(
     onTestConnection: () -> Unit,
     onBackupClick: () -> Unit,
     onRestoreClick: () -> Unit,
-    onResetStatus: () -> Unit
+    onResetStatus: () -> Unit,
+    onClearAllLocalData: () -> Unit
 ) {
     var user by remember { mutableStateOf(jianguoUser) }
     var pass by remember { mutableStateOf(jianguoPass) }
@@ -63,6 +65,7 @@ fun SettingsScreen(
 
     var showGuide by remember { mutableStateOf(false) }
     var showRestoreConfirm by remember { mutableStateOf(false) }
+    var showClearLocalDataConfirm by remember { mutableStateOf(false) }
     var showCredentialsConfigDialog by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -419,6 +422,23 @@ fun SettingsScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("从云端恢复数据 (下载覆盖)")
                             }
+
+                            Button(
+                                onClick = { showClearLocalDataConfirm = true },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
+                                    .testTag("settings_clear_local_button"),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("清空全部本地数据 (危险)")
+                            }
                         }
                     }
                 }
@@ -636,6 +656,31 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showRestoreConfirm = false }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
+    // --- Clear Local Data Confirmation Dialog ---
+    if (showClearLocalDataConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearLocalDataConfirm = false },
+            title = { Text("确认清空全部本地数据？") },
+            text = { Text("此操作将完全清空本地所有的借款记录、还款计划以及同步历史记录。\n\n该操作不可撤销，请谨慎操作！") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showClearLocalDataConfirm = false
+                        onClearAllLocalData()
+                    },
+                    modifier = Modifier.testTag("clear_confirm_ok")
+                ) {
+                    Text("确认清空", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearLocalDataConfirm = false }) {
                     Text("取消")
                 }
             }

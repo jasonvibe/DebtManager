@@ -171,6 +171,9 @@ fun MainAppScreen(viewModel: LoanViewModel) {
                     },
                     onResetStatus = {
                         viewModel.resetSyncStatus()
+                    },
+                    onClearAllLocalData = {
+                        viewModel.clearAllLocalData()
                     }
                 )
             }

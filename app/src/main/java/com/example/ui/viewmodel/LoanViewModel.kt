@@ -64,13 +64,13 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
     private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
     val syncStatus = _syncStatus.asStateFlow()
 
-    init {
-        // Auto-seed sample loans if empty
+    fun clearAllLocalData() {
         viewModelScope.launch {
-            val currentLoans = repository.allLoans.first()
-            if (currentLoans.isEmpty()) {
-                seedSampleData()
-            }
+            db.loanDao().clearLoans()
+            db.loanDao().clearRepaymentPlans()
+            db.loanDao().clearSyncRecords()
+            prefs.lastSyncTime = ""
+            _lastSyncTime.value = ""
         }
     }
 
@@ -81,82 +81,6 @@ class LoanViewModel(application: Application) : AndroidViewModel(application) {
         _jianguoUser.value = username
         _jianguoPass.value = appPass
         _jianguoUrl.value = serverUrl
-    }
-
-    private suspend fun seedSampleData() {
-        // Loan 1: 素 10000
-        val l1 = Loan(
-            borrowerName = "素",
-            principal = 10000.0,
-            loanDate = "2026-03-15",
-            totalPeriods = 6,
-            repaymentMethod = "每月等额",
-            totalInterest = 0.0,
-            status = "进行中",
-            note = "初始对外借款1",
-            loanSource = "支付宝借呗",
-            repaymentDay = 15
-        )
-        // Loan 2: 素 15000
-        val l2 = Loan(
-            borrowerName = "素",
-            principal = 15000.0,
-            loanDate = "2026-04-01",
-            totalPeriods = 12,
-            repaymentMethod = "每月等额",
-            totalInterest = 600.0,
-            status = "进行中",
-            note = "初始对外借款2",
-            loanSource = "招商银行信用卡",
-            repaymentDay = 1
-        )
-        // Loan 3: 李家辉 40000
-        val l3 = Loan(
-            borrowerName = "李家辉",
-            principal = 40000.0,
-            loanDate = "2026-01-10",
-            totalPeriods = 12,
-            repaymentMethod = "先息后本",
-            totalInterest = 2400.0,
-            status = "进行中",
-            note = "初始对外借款3",
-            loanSource = "微粒贷",
-            repaymentDay = 10
-        )
-        // Loan 4: 辉新 85000
-        val l4 = Loan(
-            borrowerName = "辉新",
-            principal = 85000.0,
-            loanDate = "2026-05-10",
-            totalPeriods = 24,
-            repaymentMethod = "每月等额",
-            totalInterest = 5000.0,
-            status = "进行中",
-            note = "初始对外借款4",
-            loanSource = "自有资金",
-            repaymentDay = 10
-        )
-
-        repository.addLoanWithPlans(l1)
-        repository.addLoanWithPlans(l2)
-        repository.addLoanWithPlans(l3)
-        repository.addLoanWithPlans(l4)
-
-        // Mark some historic payments as received automatically to show realistic history
-        val plans = repository.allRepaymentPlans.first()
-        viewModelScope.launch {
-            plans.forEach { plan ->
-                if (DateUtils.isOverdue(plan.dueDate, "待收") && plan.periodNumber <= 2) {
-                    repository.updateRepaymentPlan(
-                        plan.copy(
-                            status = "已收",
-                            actualReceivedDate = plan.dueDate,
-                            actualReceivedAmount = plan.totalAmount
-                        )
-                    )
-                }
-            }
-        }
     }
 
     // --- Loan Operations ---
